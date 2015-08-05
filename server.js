@@ -16,6 +16,10 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser());
 
+server.use(restify.CORS());
+
+///////////// PRODUCTS /////////////
+
 server.get('/products/:id', function (req, res) {
   db.Product.findById(req.params.id)
     .then(function (product) {
@@ -28,12 +32,55 @@ server.get('/products/:id', function (req, res) {
 });
 
 server.get('/products',  function (req, res) {
-  db.Product.findAll()
+  db.Product.findAll( {
+    include: [{
+      model: db.Inventory,
+      required: true
+    }]
+  })
     .then(function (products) {
       res.json(products);
     });
 });
 
-server.listen(8080, function () {
+
+
+///////////// END PRODUCTS /////////////
+
+
+/////////// ORDERS /////////////
+
+server.get('/orders',  function (req, res) {
+  db.Order.findAll()
+    .then(function (orders) {
+      res.json(orders);
+    });
+});
+
+server.get('/orders/:id', function (req, res) {
+  db.Order.findById(req.params.id)
+    .then(function (order) {
+      if(order) {
+        return res.json(order);
+      } else {
+        res.json({});
+      }
+    });
+});
+
+server.post('/orders', function (req, res) {
+  db .Order.create({
+    name: req.body.name,
+    product_id: req.body.product_id,
+    quantity: req.body.quantity
+  })
+  .then(function (order) {
+    return res.json(order);
+  });
+});
+
+///////////// END ORDERS /////////////
+
+server.listen(8080, function() {
   console.log('Going hard in the paint');
 });
